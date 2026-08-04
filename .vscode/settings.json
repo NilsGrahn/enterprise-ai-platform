@@ -1,0 +1,10 @@
+{
+    "python.analysis.extraPaths": [
+        "./data-platform/src",
+        "./ml-service/src",
+        "./explain-service/src",
+        "./llm-service/src",
+        "./integration-service/src",
+        "./monitoring/src"
+    ]
+}
