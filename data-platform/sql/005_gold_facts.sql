@@ -35,3 +35,23 @@ CREATE INDEX IF NOT EXISTS ix_fact_assessment_split
     ON gold.fact_credit_assessment (dataset_split);
 CREATE INDEX IF NOT EXISTS ix_fact_assessment_date
     ON gold.fact_credit_assessment (snapshot_date_key);
+
+
+
+    -- GRAIN: one row per scoring request.
+CREATE TABLE IF NOT EXISTS gold.fact_prediction (
+    prediction_key      BIGSERIAL PRIMARY KEY,
+    date_key            INTEGER NOT NULL REFERENCES gold.dim_date(date_key),
+    model_key           INTEGER NOT NULL REFERENCES gold.dim_model(model_key),
+    borrower_key        BIGINT REFERENCES gold.dim_borrower(borrower_key),  -- NULL for unknown applicants
+
+    request_id          UUID NOT NULL UNIQUE,
+    applicant_id        INTEGER,
+    predicted_at        TIMESTAMPTZ NOT NULL,
+    probability_default NUMERIC(9,6) NOT NULL,
+    predicted_class     SMALLINT NOT NULL,
+    risk_band           TEXT NOT NULL,          -- 'low','medium','high','very_high'
+    threshold_used      NUMERIC(5,4) NOT NULL,
+    latency_ms          INTEGER,
+    actual_outcome      SMALLINT                -- backfilled when the outcome is known
+);
