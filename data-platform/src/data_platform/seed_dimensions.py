@@ -96,9 +96,12 @@ def seed_dim_delinquency_profile():
                    'd': has_sentinel, 'sev': severity})
     print(f"seeded dim_delinquency_profile: {len(combos)} rows")
 
-if __name__ == '__main__':
+def main():
     seed_dim_date()
     seed_dim_income_band()
     seed_dim_utilisation_band()
     seed_dim_delinquency_profile()
-    print("all dimensions seeded")
+
+
+if __name__ == '__main__':
+    main()
