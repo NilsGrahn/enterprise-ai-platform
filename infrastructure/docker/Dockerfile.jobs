@@ -1,0 +1,19 @@
+FROM eap-base:latest
+
+COPY pyproject.toml ./
+COPY integration-service/ ./integration-service/
+COPY data-platform/       ./data-platform/
+COPY ml-service/          ./ml-service/
+COPY monitoring/          ./monitoring/
+# This image runs three different batch jobs — ETL, training, and building the
+# drift reference — so it needs the union of what they import. No inference-api,
+# no dashboard: a batch job never serves HTTP.
+
+RUN pip install --no-cache-dir -e .
+
+CMD ["python", "-m", "data_platform.run_etl"]
+# A batch job, not a server: it runs, prints, and exits. Compose will show it as
+# "exited (0)" — that is success, not a crash. The default here is overridden
+# per-service in the compose file, so the same image serves as etl, trainer and
+# reference-builder.
+# No HEALTHCHECK: there is nothing long-running to check.

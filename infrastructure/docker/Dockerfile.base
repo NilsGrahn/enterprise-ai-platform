@@ -1,0 +1,38 @@
+FROM python:3.11-slim
+# The starting filesystem: Debian with Python 3.11 preinstalled.
+# '-slim' omits compilers, docs and extras — roughly 150MB instead of ~1GB.
+
+ENV PYTHONDONTWRITEBYTECODE=1 \
+    PYTHONUNBUFFERED=1
+# PYTHONDONTWRITEBYTECODE: don't create .pyc files inside the container. They
+#   would only bloat the image, since the container is recreated rather than
+#   re-run from a warm cache.
+# PYTHONUNBUFFERED: print() flushes immediately instead of buffering, so
+#   `docker logs` shows output in real time rather than in silent bursts.
+
+WORKDIR /app
+# Every later instruction, and the container's default directory at runtime,
+# is /app. Created automatically if it doesn't exist.
+
+RUN apt-get update && apt-get install -y --no-install-recommends \
+        libgomp1 \
+        curl \
+    && rm -rf /var/lib/apt/lists/*
+# libgomp1: the GNU OpenMP runtime. XGBoost links against it for parallelism,
+#   and slim images do not include it. Omit this and the container starts, then
+#   dies with "libgomp.so.1: cannot open shared object file". This is the single
+#   most common failure when containerising XGBoost.
+# curl: used by the compose healthchecks in Part 6.
+# rm -rf /var/lib/apt/lists/*: deletes the apt package cache in the SAME RUN
+#   instruction. Docker snapshots the filesystem after each instruction, so
+#   cleaning up in a separate RUN would leave the cache permanently baked into
+#   the earlier layer.
+
+COPY requirements.txt .
+RUN pip install --no-cache-dir -r requirements.txt
+# Dependencies are copied and installed BEFORE any source code, deliberately.
+# Docker caches each layer and reuses it while its inputs are unchanged. Since
+# requirements.txt changes rarely and .py files change constantly, this ordering
+# means editing code does not re-run pip install. Reversing these two steps
+# costs several minutes on every single build.
+# --no-cache-dir: don't keep pip's download cache inside the image.

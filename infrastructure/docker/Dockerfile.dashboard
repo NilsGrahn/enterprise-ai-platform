@@ -1,0 +1,30 @@
+FROM eap-base:latest
+
+COPY pyproject.toml ./
+COPY data-platform/ ./data-platform/
+COPY dashboard/     ./dashboard/
+# Note what is absent: ml-service, explain-service, llm-service. The dashboard
+# is a pure API consumer (ADR-0007) and only needs data_platform for the
+# read-only gold queries in the portfolio view. If someone added an
+# `import ml_service` to a dashboard page, this container would fail to start —
+# the architectural rule is enforced by the image contents.
+
+RUN pip install --no-cache-dir -e .
+
+EXPOSE 8501
+
+HEALTHCHECK --interval=30s --timeout=5s --start-period=20s --retries=3 \
+  CMD curl -fsS http://localhost:8501/_stcore/health || exit 1
+# Streamlit's own built-in health endpoint.
+
+CMD ["streamlit", "run", "dashboard/app/Home.py", \
+     "--server.port=8501", \
+     "--server.address=0.0.0.0", \
+     "--server.headless=true", \
+     "--browser.gatherUsageStats=false"]
+# --server.address=0.0.0.0: same reasoning as uvicorn's --host.
+# --server.headless=true: stops Streamlit trying to open a browser and prompting
+#   for an email address on first run. Recall that prompt from Phase 6 — in a
+#   container there is nobody to press Enter, so the container would hang there
+#   forever.
+# --browser.gatherUsageStats=false: no telemetry from a container.

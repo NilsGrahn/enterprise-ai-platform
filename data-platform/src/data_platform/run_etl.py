@@ -16,11 +16,12 @@ def run_stage(name, func):
 def main():
     full = '--full' in sys.argv
 
+    run_stage('migrate', migrate.main)
+    run_stage('seed_dimensions', seed_dimensions.main)
+
     if full:
         run_stage('ingest', lambda: ingest.ingest('data/raw/cs-training.csv'))
 
-    run_stage('migrate', migrate.main)
-    run_stage('seed_dimensions', seed_dimensions.main)
     run_stage('bronze_to_silver', bronze_to_silver.main)
     run_stage('load_dim_borrower', load_dim_borrower.main)
     run_stage('load_fact_assessment', load_fact_assessment.main)

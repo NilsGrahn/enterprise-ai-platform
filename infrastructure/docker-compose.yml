@@ -1,0 +1,180 @@
+# ---------------------------------------------------------------------------
+# Reusable environment blocks.
+#
+# A key starting with 'x-' is an extension field: compose ignores it as a
+# service but YAML anchors defined here can be referenced below. This is the
+# fix for the original guide's undefined *db_env alias.
+#
+# &name defines an anchor; <<: *name merges it into a mapping.
+# ---------------------------------------------------------------------------
+x-database-env: &database-env
+  POSTGRES_HOST: postgres          # the SERVICE NAME, never localhost
+  POSTGRES_PORT: 5432              # the container's internal port
+  POSTGRES_DB: ${POSTGRES_DB}
+  POSTGRES_USER: ${POSTGRES_USER}
+  POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+
+x-model-env: &model-env
+  ACTIVE_PIPELINE: ${ACTIVE_PIPELINE}
+  MODEL_VERSION: ${MODEL_VERSION}
+  ARTIFACT_DIR: /app/artifacts     # absolute, inside the container
+  DECISION_THRESHOLD: ${DECISION_THRESHOLD}
+
+services:
+
+  # -------------------------------------------------------------------------
+  # PostgreSQL. The only stateful service.
+  # -------------------------------------------------------------------------
+  postgres:
+    image: postgres:16-alpine
+    # A prebuilt official image — no Dockerfile needed. '-alpine' is a very
+    # small Linux base, so the image is a fraction of the usual size.
+    environment:
+      POSTGRES_DB: ${POSTGRES_DB}
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+      # The official image reads these on first start and creates the database
+      # and role for you. Recall doing this by hand with psql in Phase 0 —
+      # this is the containerised equivalent, automatic.
+    ports:
+      - "5433:5432"
+      # host:container. 5433 on the host avoids clashing with the WSL Postgres
+      # you installed in Phase 0. Other containers still reach it on 5432,
+      # because that mapping only affects access from your machine.
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+      # A NAMED VOLUME. /var/lib/postgresql/data is where Postgres stores
+      # everything. Without this, `docker compose down` would destroy the
+      # database. With it, data survives container removal.
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER} -d ${POSTGRES_DB}"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+      # pg_isready ships with Postgres and exits 0 when the server is accepting
+      # connections. This is what the other services wait on — see depends_on.
+    restart: unless-stopped
+
+  # -------------------------------------------------------------------------
+  # ETL: migrations, dimension seeding, bronze -> silver -> gold.
+  # A batch job. Runs, prints, exits 0.
+  # -------------------------------------------------------------------------
+  etl:
+    build:
+      context: ..                                    # the repo root
+      dockerfile: infrastructure/docker/Dockerfile.jobs
+    image: eap-jobs:latest
+    environment:
+      <<: *database-env
+    volumes:
+      - ../data:/app/data:ro
+      # Read-only. The ETL reads cs-training.csv and must never modify it.
+    depends_on:
+      postgres:
+        condition: service_healthy
+        # Waits for the HEALTHCHECK to pass, not merely for the container to
+        # exist. Without the condition, the ETL would start while Postgres was
+        # still initialising and fail to connect.
+    command: ["python", "-m", "data_platform.run_etl", "--full"]
+    # --full includes the ingestion step, which a fresh empty database needs.
+    restart: "no"
+    # A batch job must not restart on exit — it would loop forever.
+
+  # -------------------------------------------------------------------------
+  # Trainer: fits a model, saves the artifact, registers and activates it.
+  # -------------------------------------------------------------------------
+  trainer:
+    build:
+      context: ..
+      dockerfile: infrastructure/docker/Dockerfile.jobs
+    image: eap-jobs:latest
+    environment:
+      <<: [*database-env, *model-env]
+      # Merging two anchors. Compose supports a list of merges.
+    volumes:
+      - ../artifacts:/app/artifacts
+      # WRITABLE, deliberately. The trained model lands here, on your host disk,
+      # so it survives the container exiting and is visible to the API without
+      # rebuilding any image.
+    depends_on:
+      etl:
+        condition: service_completed_successfully
+        # Runs only after the ETL exited with code 0. This encodes the real
+        # dependency: you cannot train on data that has not been loaded.
+    command: ["python", "-m", "ml_service.train", "--activate"]
+    restart: "no"
+
+  # -------------------------------------------------------------------------
+  # Reference profile builder (Phase 7). Not in the original guide.
+  # Without it a clean deployment has no drift reference and the drift check
+  # fails with FileNotFoundError.
+  # -------------------------------------------------------------------------
+  reference:
+    build:
+      context: ..
+      dockerfile: infrastructure/docker/Dockerfile.jobs
+    image: eap-jobs:latest
+    environment:
+      <<: [*database-env, *model-env]
+    volumes:
+      - ../artifacts:/app/artifacts
+    depends_on:
+      trainer:
+        condition: service_completed_successfully
+    command: ["python", "-m", "monitoring.build_reference"]
+    restart: "no"
+
+  # -------------------------------------------------------------------------
+  # The inference API. A long-running service.
+  # -------------------------------------------------------------------------
+  api:
+    build:
+      context: ..
+      dockerfile: infrastructure/docker/Dockerfile.api
+    image: eap-api:latest
+    environment:
+      <<: [*database-env, *model-env]
+      LLM_API_KEY: ${LLM_API_KEY:-}
+      LLM_ENABLED: ${LLM_ENABLED:-false}
+      LLM_MODEL: ${LLM_MODEL:-claude-sonnet-4-5}
+      # ${VAR:-default} supplies a fallback if the variable is unset, so a
+      # missing LLM key does not break startup. Recall from Phase 4 that the
+      # system degrades to a template report rather than failing.
+    ports:
+      - "8000:8000"
+    volumes:
+      - ../artifacts:/app/artifacts:ro
+      # READ-ONLY. Serving must never write to the artifact directory.
+    depends_on:
+      trainer:
+        condition: service_completed_successfully
+      postgres:
+        condition: service_healthy
+    restart: unless-stopped
+
+  # -------------------------------------------------------------------------
+  # The Streamlit dashboard.
+  # -------------------------------------------------------------------------
+  dashboard:
+    build:
+      context: ..
+      dockerfile: infrastructure/docker/Dockerfile.dashboard
+    image: eap-dashboard:latest
+    environment:
+      <<: *database-env
+      INFERENCE_API_URL: http://api:8000
+      # The service name again, not localhost. Recall that api_client.py reads
+      # exactly this variable, with a localhost default for running outside
+      # containers — which is why no code changes in this phase.
+    ports:
+      - "8501:8501"
+    depends_on:
+      api:
+        condition: service_healthy
+        # Waits for the API's own HEALTHCHECK, so the dashboard does not come up
+        # showing a connection-error banner.
+    restart: unless-stopped
+
+volumes:
+  pgdata:
+  # Declares the named volume used by postgres. Docker manages where it lives.

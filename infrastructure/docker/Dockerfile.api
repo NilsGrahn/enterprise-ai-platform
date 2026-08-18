@@ -1,0 +1,51 @@
+FROM eap-base:latest
+# Starts from the image built in Part 4, so all packages are already installed.
+
+COPY pyproject.toml ./
+COPY ml-service/          ./ml-service/
+COPY explain-service/     ./explain-service/
+COPY llm-service/         ./llm-service/
+COPY data-platform/       ./data-platform/
+COPY monitoring/          ./monitoring/
+COPY inference-api/       ./inference-api/
+# Only what this service imports. Recall the import chain:
+#   inference-api -> ml_service (pipelines, artifacts, config)
+#                 -> explain_service (SHAP)
+#                 -> llm_service (narrative)
+#                 -> data_platform (db)
+#                 -> monitoring (prediction_logger, added in Phase 7)
+# integration-service and dashboard are deliberately absent — the API never
+# imports them.
+
+RUN pip install --no-cache-dir -e .
+# Installs the six shared packages in editable mode, exactly as you did in
+# Phase 0. This is what makes `import ml_service` resolve inside the container.
+# It reads pyproject.toml's packages.find section, which is why pyproject.toml
+# is copied first.
+
+ENV PYTHONPATH=/app/inference-api
+# Recall from Phase 5 that inference-api/app is NOT an installed package, so
+# `app.main` only resolves if inference-api/ is on the search path. Locally you
+# handled this by running `cd inference-api` first. Here it's set explicitly.
+
+EXPOSE 8000
+# Documentation only. It records which port the service listens on; it does not
+# publish anything. Compose's `ports:` mapping does the actual publishing.
+
+HEALTHCHECK --interval=30s --timeout=5s --start-period=60s --retries=3 \
+  CMD curl -fsS http://localhost:8000/health/live || exit 1
+# Docker runs this periodically and marks the container healthy or unhealthy.
+# --start-period=60s: failures during the first 60 seconds don't count, giving
+#   the model and the SHAP explainer time to load. Recall from Phase 4 that
+#   building a TreeExplainer is genuinely slow.
+# /health/live rather than /health: recall from Phase 5 that liveness checks
+#   nothing but the process. Using /health would make a database blip mark the
+#   container unhealthy and, under a restart policy, restart it pointlessly.
+# localhost IS correct here — the healthcheck runs inside this same container.
+# curl flags: -f fail on HTTP errors, -s silent, -S still show errors.
+
+CMD ["uvicorn", "app.main:app", "--host", "0.0.0.0", "--port", "8000"]
+# --host 0.0.0.0 is mandatory and non-obvious. Uvicorn's default is 127.0.0.1,
+# which only accepts connections originating inside the container — so the port
+# mapping would appear to do nothing and `curl localhost:8000` from your machine
+# would be refused. 0.0.0.0 means "accept on all interfaces".
