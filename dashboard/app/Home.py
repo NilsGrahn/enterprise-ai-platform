@@ -5,10 +5,9 @@ APP_DIR = Path(__file__).resolve().parent
 if str(APP_DIR) not in sys.path:
     sys.path.insert(0, str(APP_DIR))
 
-import streamlit as st
-
 import api_client
 import data_access
+import streamlit as st
 
 st.set_page_config(
     page_title='Enterprise AI Platform',

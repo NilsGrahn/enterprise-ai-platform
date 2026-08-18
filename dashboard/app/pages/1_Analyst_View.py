@@ -5,12 +5,11 @@ APP_DIR = Path(__file__).resolve().parents[1]
 if str(APP_DIR) not in sys.path:
     sys.path.insert(0, str(APP_DIR))
 
+import api_client
+import data_access
 import pandas as pd
 import plotly.graph_objects as go
 import streamlit as st
-
-import api_client
-import data_access
 
 st.set_page_config(page_title='Analyst View', page_icon='🔍', layout='wide')
 

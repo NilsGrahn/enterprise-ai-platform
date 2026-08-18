@@ -1,10 +1,6 @@
 from datetime import datetime, timezone
 from time import perf_counter
 from uuid import uuid4
-from monitoring.prediction_logger import log_prediction
-from fastapi import APIRouter, HTTPException
-
-from llm_service.report import generate_credit_report
 
 from app.model_store import MODEL_STORE
 from app.schemas import (
@@ -17,6 +13,9 @@ from app.schemas import (
     to_pipeline_frame,
 )
 from app.settings import get_settings
+from fastapi import APIRouter, HTTPException
+from llm_service.report import generate_credit_report
+from monitoring.prediction_logger import log_prediction
 
 router = APIRouter(tags=['prediction'])
 settings = get_settings()

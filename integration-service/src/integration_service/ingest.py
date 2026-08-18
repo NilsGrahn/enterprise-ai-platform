@@ -1,9 +1,9 @@
+import sys
 from uuid import uuid4
-import pandas as pd
+
 from data_platform.db import get_engine
 from integration_service.sources import CsvFileSource
 from sqlalchemy import text
-import sys
 
 COLUMN_MAP = {
     'Unnamed: 0': 'raw_row_id',

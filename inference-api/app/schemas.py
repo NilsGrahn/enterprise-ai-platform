@@ -1,5 +1,5 @@
 from datetime import datetime
-from typing import Literal, Optional
+from typing import Literal
 
 import pandas as pd
 from pydantic import BaseModel, Field, field_validator
@@ -24,7 +24,7 @@ class ApplicantFeatures(BaseModel):
         ..., ge=0, alias='DebtRatio',
         description='Monthly debt payments divided by monthly gross income',
     )
-    monthly_income: Optional[float] = Field(
+    monthly_income: float | None = Field(
         None, ge=0, alias='MonthlyIncome',
         description='Null is accepted; the pipeline imputes it and flags the imputation',
     )
@@ -45,7 +45,7 @@ class ApplicantFeatures(BaseModel):
     times_90_days_late: int = Field(
         ..., ge=0, alias='NumberOfTimes90DaysLate',
     )
-    number_of_dependents: Optional[int] = Field(
+    number_of_dependents: int | None = Field(
         None, ge=0, alias='NumberOfDependents',
     )
 
@@ -98,7 +98,7 @@ def to_pipeline_frame(features: 'ApplicantFeatures') -> pd.DataFrame:
 
 
 class PredictRequest(BaseModel):
-    applicant_id: Optional[int] = None
+    applicant_id: int | None = None
     features: ApplicantFeatures
     include_explanation: bool = True
     include_narrative: bool = False      # costs an LLM call, so opt in
@@ -113,7 +113,7 @@ class ContributionOut(BaseModel):
     value: float
     contribution: float
     direction: Literal['increases_risk', 'decreases_risk']
-    reason_code: Optional[str] = None
+    reason_code: str | None = None
     rank: int
 
 
@@ -129,15 +129,15 @@ class NarrativeOut(BaseModel):
 
 class PredictResponse(BaseModel):
     request_id: str
-    applicant_id: Optional[int] = None
+    applicant_id: int | None = None
     probability_default: float = Field(..., ge=0, le=1)
     predicted_class: Literal[0, 1]
     risk_band: Literal['low', 'medium', 'high', 'very_high']
     threshold_used: float
     model_version: str
     pipeline_name: str
-    explanation: Optional[list[ContributionOut]] = None
-    narrative: Optional[NarrativeOut] = None
+    explanation: list[ContributionOut] | None = None
+    narrative: NarrativeOut | None = None
     latency_ms: int
     predicted_at: datetime
 
@@ -149,7 +149,7 @@ class HealthResponse(BaseModel):
     model_version: str
     model_loaded: bool
     database_reachable: bool
-    llm_reachable: Optional[bool] = None
+    llm_reachable: bool | None = None
     uptime_seconds: float
 
 
@@ -159,7 +159,7 @@ class MetricsResponse(BaseModel):
     errors_total: int
     latency_p50_ms: float
     latency_p95_ms: float
-    average_probability_last_hour: Optional[float] = None
+    average_probability_last_hour: float | None = None
     active_model_version: str
     drift_status: Literal['OK', 'WARN', 'ALERT', 'UNKNOWN']
 

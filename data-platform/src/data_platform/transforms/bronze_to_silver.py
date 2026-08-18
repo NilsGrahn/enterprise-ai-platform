@@ -1,6 +1,7 @@
 import sys
-import pandas as pd
+
 import numpy as np
+import pandas as pd
 from data_platform.db import get_engine
 from sqlalchemy import text
 

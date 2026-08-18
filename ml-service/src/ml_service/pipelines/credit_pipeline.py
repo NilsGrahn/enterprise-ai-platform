@@ -1,9 +1,8 @@
 import numpy as np
 import pandas as pd
+from ml_service.base_pipeline import BasePipeline, TrainingResult
 from sklearn.metrics import precision_score, recall_score, roc_auc_score, roc_curve
 from xgboost import XGBClassifier
-
-from ml_service.base_pipeline import BasePipeline, TrainingResult
 
 
 def ks_statistic(y_true, y_score) -> float:

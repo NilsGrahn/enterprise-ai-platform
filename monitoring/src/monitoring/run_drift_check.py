@@ -8,13 +8,12 @@ import json
 from pathlib import Path
 
 import pandas as pd
-from sqlalchemy import text
-
 from data_platform.db import get_engine
 from ml_service.artifacts import artifact_path
 from ml_service.config import get_settings
 from monitoring.drift import classify, psi_from_profile
 from monitoring.prediction_logger import log_service_event
+from sqlalchemy import text
 
 MIN_ROWS = 100
 

@@ -1,5 +1,4 @@
 import pandas as pd
-import numpy as np
 from data_platform.db import get_engine
 from sqlalchemy import text
 

@@ -1,6 +1,7 @@
-from abc import abstractmethod, ABC
-from typing import Iterator
 import hashlib
+from abc import ABC, abstractmethod
+from collections.abc import Iterator
+
 import pandas as pd
 
 

@@ -18,6 +18,10 @@ where = [
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]
-
+pythonpath = ["inference-api"]
+addopts = "-v --tb=short"
+markers = [
+    "integration: needs a live database (deselect with -m 'not integration')",
+]
 [tool.ruff]
 line-length = 100

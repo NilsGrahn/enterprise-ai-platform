@@ -1,12 +1,11 @@
 import time
 
-from sqlalchemy import text
-
 from data_platform.db import get_engine
 from explain_service.explainer import ShapTreeExplainer
 from llm_service.client import LLMClient, NullLLMClient
-from ml_service.artifacts import load_artifact, ArtifactNotFoundError
+from ml_service.artifacts import ArtifactNotFoundError, load_artifact
 from ml_service.pipelines import get_pipeline
+from sqlalchemy import text
 
 
 class ModelStore:

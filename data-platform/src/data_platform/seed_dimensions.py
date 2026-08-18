@@ -1,6 +1,8 @@
 import itertools
+
 import pandas as pd
 from data_platform.db import get_engine
+
 
 def seed_dim_date(start='2024-01-01', end='2027-12-31'):
     engine = get_engine()

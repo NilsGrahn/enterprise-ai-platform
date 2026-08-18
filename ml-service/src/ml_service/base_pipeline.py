@@ -1,11 +1,10 @@
 from abc import ABC, abstractmethod
-from dataclasses import dataclass, field
+from dataclasses import dataclass
 from typing import Any
 
 import pandas as pd
-from sqlalchemy import text
-
 from data_platform.db import get_engine
+from sqlalchemy import text
 
 
 class SchemaError(Exception):

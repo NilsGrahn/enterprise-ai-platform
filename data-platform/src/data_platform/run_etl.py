@@ -1,5 +1,6 @@
 import sys
 import time
+
 from data_platform import migrate, seed_dimensions
 from data_platform.transforms import bronze_to_silver, load_dim_borrower, load_fact_assessment
 from integration_service import ingest

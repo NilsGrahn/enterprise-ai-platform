@@ -1,21 +1,16 @@
 from contextlib import asynccontextmanager
 from uuid import uuid4
 
+from app.middleware import RequestContextMiddleware
+from app.model_store import MODEL_STORE
+from app.routers import health, metrics, predict
+from app.settings import get_settings
 from fastapi import FastAPI, Request
 from fastapi.exceptions import RequestValidationError
 from fastapi.responses import JSONResponse
-from sqlalchemy import text
 
-from data_platform.db import get_engine
-
-from app.model_store import MODEL_STORE
-from app.settings import get_settings
-from app.routers import predict, health, metrics
-
-from app.middleware import RequestContextMiddleware
 settings = get_settings()
 from monitoring.prediction_logger import log_service_event
-
 
 
 @asynccontextmanager

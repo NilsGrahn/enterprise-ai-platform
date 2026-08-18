@@ -5,11 +5,10 @@ APP_DIR = Path(__file__).resolve().parents[1]
 if str(APP_DIR) not in sys.path:
     sys.path.insert(0, str(APP_DIR))
 
-import plotly.express as px
-import streamlit as st
-
 import api_client
 import data_access
+import plotly.express as px
+import streamlit as st
 
 st.set_page_config(page_title='Portfolio View', page_icon='📊', layout='wide')
 

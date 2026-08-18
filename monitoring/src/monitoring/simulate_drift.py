@@ -15,7 +15,6 @@ import sys
 
 import pandas as pd
 import requests
-
 from data_platform.db import get_engine
 
 API_URL = os.getenv('INFERENCE_API_URL', 'http://localhost:8000')
@@ -128,7 +127,7 @@ def main():
         print("Nothing was scored. Is the API running?", file=sys.stderr)
         sys.exit(1)
 
-    print(f"\nNow run:  python -m monitoring.run_drift_check --window-hours 1")
+    print("\nNow run:  python -m monitoring.run_drift_check --window-hours 1")
 
 
 if __name__ == '__main__':

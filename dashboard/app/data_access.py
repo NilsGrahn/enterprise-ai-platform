@@ -9,7 +9,7 @@ from sqlalchemy import text
 REPO_ROOT = Path(__file__).resolve().parents[2]
 load_dotenv(REPO_ROOT / '.env')
 
-from data_platform.db import get_engine    # noqa: E402  (after load_dotenv on purpose)
+from data_platform.db import get_engine
 
 CACHE_TTL = 300
 

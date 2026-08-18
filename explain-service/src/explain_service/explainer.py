@@ -2,7 +2,6 @@ from abc import ABC, abstractmethod
 
 import numpy as np
 import shap
-
 from explain_service.schema import ExplanationResult, FeatureContribution
 
 

@@ -14,6 +14,9 @@ from pathlib import Path
 
 import numpy as np
 import pandas as pd
+from ml_service.artifacts import load_artifact
+from ml_service.config import get_settings
+from ml_service.pipelines import get_pipeline
 from sklearn.metrics import (
     confusion_matrix,
     f1_score,
@@ -22,10 +25,6 @@ from sklearn.metrics import (
     roc_auc_score,
     roc_curve,
 )
-
-from ml_service.artifacts import load_artifact
-from ml_service.config import get_settings
-from ml_service.pipelines import get_pipeline
 
 
 def parse_args():

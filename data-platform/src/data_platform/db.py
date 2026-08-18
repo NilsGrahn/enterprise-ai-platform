@@ -1,9 +1,10 @@
 import os
 from functools import lru_cache
 from pathlib import Path
+
 import psycopg2
-from sqlalchemy import create_engine, text
 from dotenv import load_dotenv
+from sqlalchemy import create_engine
 
 load_dotenv()
 

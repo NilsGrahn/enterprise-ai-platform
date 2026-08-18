@@ -3,7 +3,6 @@ from datetime import datetime, timezone
 from pathlib import Path
 
 import joblib
-
 from ml_service.config import get_settings
 
 

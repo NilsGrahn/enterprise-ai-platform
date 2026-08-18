@@ -1,12 +1,11 @@
 import json
 import re
-
-from pydantic import BaseModel, Field, ValidationError
 from typing import Literal
 
 from llm_service.client import LLMUnavailableError
 from llm_service.payload import build_model_output
-from llm_service.prompts import SYSTEM_PROMPT, USER_TEMPLATE, RETRY_SUFFIX
+from llm_service.prompts import RETRY_SUFFIX, SYSTEM_PROMPT, USER_TEMPLATE
+from pydantic import BaseModel, Field, ValidationError
 
 
 class ReportValidationError(Exception):

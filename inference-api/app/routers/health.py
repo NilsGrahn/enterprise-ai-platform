@@ -1,11 +1,9 @@
-from fastapi import APIRouter, Response
-from sqlalchemy import text
-
-from data_platform.db import get_engine
-
 from app.model_store import MODEL_STORE
 from app.schemas import HealthResponse
 from app.settings import get_settings
+from data_platform.db import get_engine
+from fastapi import APIRouter, Response
+from sqlalchemy import text
 
 router = APIRouter(tags=['health'])
 settings = get_settings()

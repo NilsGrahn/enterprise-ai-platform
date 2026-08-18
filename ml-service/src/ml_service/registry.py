@@ -1,9 +1,8 @@
 import json
 import math
 
-from sqlalchemy import text
-
 from data_platform.db import get_engine
+from sqlalchemy import text
 
 
 def _json_safe(obj):

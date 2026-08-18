@@ -1,13 +1,11 @@
 import time
 
-from fastapi import APIRouter
-from sqlalchemy import text
-
-from data_platform.db import get_engine
-
 from app.model_store import MODEL_STORE
 from app.schemas import MetricsResponse
 from app.settings import get_settings
+from data_platform.db import get_engine
+from fastapi import APIRouter
+from sqlalchemy import text
 
 router = APIRouter(tags=['metrics'])
 settings = get_settings()
