@@ -159,3 +159,13 @@ class BasePipeline(ABC):
         print(f"registered in gold.dim_model as model_key={model_key}")
 
         return result
+    
+    def build_feature_frame(self, df):
+        """Return the engineered feature frame for raw input, without predicting.
+
+        Used by the API to log exactly what the model consumed, and by the
+        drift checker to describe the training distribution.
+        """
+        cleaned = self.clean(df)
+        X, _ = self.feature_engineering(cleaned, fit=False)
+        return X

@@ -1,7 +1,7 @@
 from datetime import datetime, timezone
 from time import perf_counter
 from uuid import uuid4
-
+from monitoring.prediction_logger import log_prediction
 from fastapi import APIRouter, HTTPException
 
 from llm_service.report import generate_credit_report
@@ -41,17 +41,24 @@ def _dq_flags(features) -> dict:
     }
 
 
-def _score_one(request: PredictRequest, request_id: str) -> PredictResponse:
+def _score_one(request: PredictRequest, request_id: str):
+    """Returns (response, feature_frame). The frame is logged by the caller."""
     started = perf_counter()
 
     df = to_pipeline_frame(request.features)
+
+    # What the model actually consumes — logged so drift is measured on the
+    # engineered features, not the raw request.
+    feature_frame = MODEL_STORE.pipeline.build_feature_frame(df)
 
     explanation = None
     if request.include_explanation or request.include_narrative:
         explanation = MODEL_STORE.explainer.explain(df, request_id=request_id)
         probability = explanation.probability
     else:
-        probability = float(MODEL_STORE.pipeline.predict(df)[0])
+        probability = float(
+            MODEL_STORE.pipeline.model.predict_proba(feature_frame)[:, 1][0]
+        )
 
     threshold = settings.decision_threshold
     predicted_class = int(probability >= threshold)
@@ -60,11 +67,8 @@ def _score_one(request: PredictRequest, request_id: str) -> PredictResponse:
     narrative = None
     if request.include_narrative:
         report = generate_credit_report(
-            explanation,
-            risk_band,
-            threshold,
-            _dq_flags(request.features),
-            MODEL_STORE.llm_client,
+            explanation, risk_band, threshold,
+            _dq_flags(request.features), MODEL_STORE.llm_client,
         )
         narrative = NarrativeOut(**report)
 
@@ -87,7 +91,7 @@ def _score_one(request: PredictRequest, request_id: str) -> PredictResponse:
 
     latency_ms = int((perf_counter() - started) * 1000)
 
-    return PredictResponse(
+    response = PredictResponse(
         request_id=request_id,
         applicant_id=request.applicant_id,
         probability_default=probability,
@@ -101,6 +105,8 @@ def _score_one(request: PredictRequest, request_id: str) -> PredictResponse:
         latency_ms=latency_ms,
         predicted_at=datetime.now(timezone.utc),
     )
+
+    return response, feature_frame
 
 
 @router.post(
@@ -118,13 +124,36 @@ def predict(request: PredictRequest):
         )
 
     request_id = str(uuid4())
-    response = _score_one(request, request_id)
 
-    # Phase 7 wires prediction logging in here. It must never raise into the
-    # response — see monitoring/src/monitoring/prediction_logger.py.
+    try:
+        response, feature_frame = _score_one(request, request_id)
+    except Exception as exc:
+        log_prediction(
+            request_id=request_id,
+            pipeline_name=MODEL_STORE.metadata['pipeline_name'],
+            model_version=MODEL_STORE.metadata['model_version'],
+            request_payload=request.features.model_dump(),
+            feature_vector={},
+            status='ERROR',
+            error_message=str(exc),
+        )
+        raise
+
+
+    log_prediction(
+        request_id=request_id,
+        pipeline_name=response.pipeline_name,
+        model_version=response.model_version,
+        request_payload=request.features.model_dump(),
+        feature_vector=feature_frame.iloc[0].to_dict(),
+        probability=response.probability_default,
+        predicted_class=response.predicted_class,
+        risk_band=response.risk_band,
+        latency_ms=response.latency_ms,
+        status='OK',
+    )
 
     return response
-
 
 @router.post(
     '/predict/batch',
@@ -141,7 +170,19 @@ def predict_batch(request: BatchPredictRequest):
 
     results = []
     for item in request.items:
-        # Explanations are expensive; default them off for batch work unless
-        # the caller explicitly asked per item.
-        results.append(_score_one(item, str(uuid4())))
+        request_id = str(uuid4())
+        response, feature_frame = _score_one(item, request_id)
+        log_prediction(
+            request_id=request_id,
+            pipeline_name=response.pipeline_name,
+            model_version=response.model_version,
+            request_payload=item.features.model_dump(),
+            feature_vector=feature_frame.iloc[0].to_dict(),
+            probability=response.probability_default,
+            predicted_class=response.predicted_class,
+            risk_band=response.risk_band,
+            latency_ms=response.latency_ms,
+            status='OK',
+        )
+        results.append(response)
     return results

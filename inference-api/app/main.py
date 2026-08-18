@@ -12,32 +12,17 @@ from app.model_store import MODEL_STORE
 from app.settings import get_settings
 from app.routers import predict, health, metrics
 
+from app.middleware import RequestContextMiddleware
 settings = get_settings()
+from monitoring.prediction_logger import log_service_event
 
-
-def _log_service_event(event_type: str, details: dict):
-    """Best-effort write to monitoring.service_event. Never raises."""
-    import json
-    try:
-        engine = get_engine()
-        with engine.begin() as conn:
-            conn.execute(text("""
-                INSERT INTO monitoring.service_event (service_name, event_type, details)
-                VALUES (:service, :event_type, CAST(:details AS JSONB))
-            """), {
-                'service': settings.app_name,
-                'event_type': event_type,
-                'details': json.dumps(details, default=str),
-            })
-    except Exception as exc:
-        print(f"[main] could not log service_event '{event_type}': {exc}")
 
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     # --- startup ---
     MODEL_STORE.load(settings)
-    _log_service_event('model_loaded', {
+    log_service_event(settings.app_name, 'model_loaded', {
         'pipeline': settings.active_pipeline,
         'model_version': settings.model_version,
         'success': MODEL_STORE.is_ready(),
@@ -47,7 +32,7 @@ async def lifespan(app: FastAPI):
     yield
 
     # --- shutdown ---
-    _log_service_event('shutdown', {'uptime_seconds': MODEL_STORE.uptime_seconds()})
+    log_service_event(settings.app_name, 'shutdown', {'uptime_seconds': MODEL_STORE.uptime_seconds()})
 
 
 app = FastAPI(
@@ -59,7 +44,7 @@ app = FastAPI(
     version=settings.app_version,
     lifespan=lifespan,
 )
-
+app.add_middleware(RequestContextMiddleware)
 app.include_router(predict.router)
 app.include_router(health.router)
 app.include_router(metrics.router)
