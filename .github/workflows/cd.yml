@@ -46,3 +46,11 @@ jobs:
 
       - name: Build the service image
         run: docker build -f infrastructure/docker/Dockerfile.${{ matrix.service }} -t local-image:latest .
+
+      
+      - name: Tag and push
+        run: |
+          for tag in ${{ steps.meta.outputs.tags }}; do
+            docker tag local-image:latest "$tag"
+            docker push "$tag"
+          done
