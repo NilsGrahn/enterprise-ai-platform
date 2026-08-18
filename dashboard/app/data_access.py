@@ -83,16 +83,19 @@ def default_rate_by_income_band() -> pd.DataFrame:
 
 @st.cache_data(ttl=CACHE_TTL)
 def active_model() -> dict:
-    """The currently active model row from gold.dim_model."""
+    """The currently active model row for the currently configured pipeline."""
+    import os
+    pipeline_name = os.getenv('ACTIVE_PIPELINE', 'credit')
+
     engine = get_engine()
     with engine.begin() as conn:
         row = conn.execute(text("""
             SELECT pipeline_name, model_version, algorithm,
                    metric_auc, metric_ks, training_rows, trained_at
             FROM gold.dim_model
-            WHERE is_active
+            WHERE is_active AND pipeline_name = :pipeline_name
             LIMIT 1
-        """)).mappings().fetchone()
+        """), {'pipeline_name': pipeline_name}).mappings().fetchone()
     return dict(row) if row else {}
 
 

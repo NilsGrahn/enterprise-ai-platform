@@ -1,0 +1,56 @@
+{
+  "pipeline_name": "dummy",
+  "model_version": "v1",
+  "split": "train",
+  "bins": 10,
+  "feature_names": [
+    "revolving_utilisation",
+    "total_delinquency_events"
+  ],
+  "features": {
+    "revolving_utilisation": {
+      "bin_edges": [
+        -Infinity,
+        0.003081,
+        0.019284600000000006,
+        0.04369140000000001,
+        0.0834296,
+        0.1543135,
+        0.27129860000000006,
+        0.445697,
+        0.7015594000000002,
+        0.9816254000000001,
+        Infinity
+      ],
+      "reference_share": [
+        0.09999045710468556,
+        0.10000954289531444,
+        0.1,
+        0.1,
+        0.1,
+        0.1,
+        0.1,
+        0.1,
+        0.1,
+        0.1
+      ],
+      "n_reference": 104790,
+      "mean": 0.324996099904571,
+      "std": 0.3653449597167746
+    },
+    "total_delinquency_events": {
+      "bin_edges": [
+        -Infinity,
+        1.0,
+        Infinity
+      ],
+      "reference_share": [
+        0.7994369691764481,
+        0.20056303082355187
+      ],
+      "n_reference": 104790,
+      "mean": 0.4008874892642428,
+      "std": 1.106752312408198
+    }
+  }
+}

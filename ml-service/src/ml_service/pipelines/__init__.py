@@ -8,8 +8,10 @@ To add a new domain:
 Nothing else in the repository changes.
 """
 
+
 from ml_service.base_pipeline import BasePipeline
 from ml_service.pipelines.credit_pipeline import CreditPipeline
+from ml_service.pipelines.dummy_pipeline import DummyPipeline
 
 
 class UnknownPipelineError(Exception):
@@ -18,11 +20,11 @@ class UnknownPipelineError(Exception):
 
 PIPELINE_REGISTRY: dict[str, type[BasePipeline]] = {
     'credit': CreditPipeline,
+    'dummy': DummyPipeline,
 }
 
 
 def get_pipeline(name: str, **kwargs) -> BasePipeline:
-    """Construct the pipeline registered under `name`."""
     if name not in PIPELINE_REGISTRY:
         raise UnknownPipelineError(
             f"Unknown pipeline '{name}'. Available: {sorted(PIPELINE_REGISTRY)}"
