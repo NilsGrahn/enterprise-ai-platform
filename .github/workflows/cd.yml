@@ -45,6 +45,4 @@ jobs:
             type=raw,value=latest,enable={{is_default_branch}}
 
       - name: Build the service image
-        run: |
-          docker build -f infrastructure/docker/Dockerfile.${{ matrix.service }} \
-            -t
+        run: docker build -f infrastructure/docker/Dockerfile.${{ matrix.service }} -t local-image:latest .
