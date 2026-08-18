@@ -50,7 +50,8 @@ jobs:
       
       - name: Tag and push
         run: |
-          for tag in ${{ steps.meta.outputs.tags }}; do
+          echo "${{ steps.meta.outputs.tags }}" | while IFS= read -r tag; do
+            [ -z "$tag" ] && continue
             docker tag local-image:latest "$tag"
             docker push "$tag"
           done
