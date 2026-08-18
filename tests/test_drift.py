@@ -1,5 +1,7 @@
 """PSI drift calculation."""
 
+import itertools
+
 import numpy as np
 import pytest
 from monitoring.drift import (
@@ -70,13 +72,13 @@ class TestBinEdges:
     def test_edges_are_strictly_increasing(self):
         rng = np.random.default_rng(1)
         edges = quantile_bin_edges(rng.exponential(1, 1000))
-        assert all(a < b for a, b in zip(edges, edges[1:]))
+        assert all(a < b for a, b in itertools.pairwise(edges))
 
     def test_binary_feature_collapses_safely(self):
         binary = np.array([0] * 800 + [1] * 200, dtype=float)
         edges = quantile_bin_edges(binary, bins=10)
         assert len(edges) >= 2
-        assert all(a < b for a, b in zip(edges, edges[1:]))
+        assert all(a < b for a, b in itertools.pairwise(edges))
 
     def test_constant_feature_collapses_to_one_bin(self):
         assert quantile_bin_edges(np.full(500, 7.0)) == [-np.inf, np.inf]

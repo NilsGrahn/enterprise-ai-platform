@@ -124,4 +124,4 @@ class TestHashSplit:
         assert 0.13 < test < 0.17
 
     def test_all_splits_are_valid_labels(self):
-        assert set(self.split_for(i) for i in range(1, 1001)) == {'train', 'valid', 'test'}
+        assert {self.split_for(i) for i in range(1, 1001)} == {'train', 'valid', 'test'}

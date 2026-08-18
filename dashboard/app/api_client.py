@@ -56,7 +56,7 @@ def predict(features: dict, include_explanation=True, include_narrative=False,
         response = requests.post(
             f'{BASE_URL}/predict', json=payload, timeout=TIMEOUT_SECONDS
         )
-    except Exception as exc:
+    except Exception as exc:  # noqa: BLE001
         return None, _friendly_error(exc)
 
     if response.status_code == 200:
@@ -83,7 +83,7 @@ def health():
     try:
         response = requests.get(f'{BASE_URL}/health', timeout=5)
         return response.json(), None
-    except Exception as exc:
+    except Exception as exc:  # noqa: BLE001
         return None, _friendly_error(exc)
 
 
@@ -94,5 +94,5 @@ def metrics():
         if response.status_code != 200:
             return None, f"API returned HTTP {response.status_code}"
         return response.json(), None
-    except Exception as exc:
+    except Exception as exc:  # noqa: BLE001
         return None, _friendly_error(exc)

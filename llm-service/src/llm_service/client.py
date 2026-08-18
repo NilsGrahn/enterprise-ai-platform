@@ -89,7 +89,7 @@ class LLMClient:
                 )
                 self.breaker.record_success()
                 return response.content[0].text
-            except Exception as exc:
+            except Exception as exc:  # noqa: BLE001
                 last_error = exc
                 if attempt < self.max_retries:
                     time.sleep(2 ** attempt)      # 1s, then 2s

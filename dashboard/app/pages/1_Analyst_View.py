@@ -48,11 +48,11 @@ def load_random_applicant():
         st.session_state['load_error'] = 'No test-split applicants found.'
         return
 
-    for field in DEFAULTS:
+    for field, default_value in DEFAULTS.items():
         value = applicant.get(field)
         if value is None or pd.isna(value):
-            st.session_state[field] = DEFAULTS[field]
-        elif isinstance(DEFAULTS[field], int):
+            st.session_state[field] = default_value
+        elif isinstance(default_value, int):
             st.session_state[field] = int(value)
         else:
             st.session_state[field] = float(value)
@@ -192,7 +192,7 @@ if contributions:
     ))
     figure.update_layout(
         height=max(280, 45 * len(labels)),
-        margin=dict(l=10, r=10, t=10, b=10),
+        margin={'l': 10, 'r': 10, 't': 10, 'b': 10},
         xaxis_title='Contribution to modelled risk (log-odds)',
         yaxis_title=None,
         showlegend=False,

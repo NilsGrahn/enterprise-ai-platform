@@ -282,8 +282,8 @@ def api_client(trained_pipeline, fake_metadata, explainer, null_llm, monkeypatch
 
 @pytest.fixture
 def api_client_no_model(monkeypatch):
-    from fastapi.testclient import TestClient
     from app import main as app_main
+    from fastapi.testclient import TestClient
 
     with TestClient(app_main.app) as client:
         # Patch AFTER lifespan has already loaded the real model,

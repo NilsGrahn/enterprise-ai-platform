@@ -74,7 +74,7 @@ with left:
                 'default_rate': 'Observed default rate',
             },
         )
-        figure.update_layout(height=360, margin=dict(l=10, r=10, t=10, b=10))
+        figure.update_layout(height=360, margin={'l': 10, 'r': 10, 't': 10, 'b': 10})
         figure.update_yaxes(tickformat='.1%')
         st.plotly_chart(figure, use_container_width=True)
 
@@ -92,7 +92,7 @@ with right:
                 'default_rate': 'Observed default rate',
             },
         )
-        figure.update_layout(height=360, margin=dict(l=10, r=10, t=10, b=10))
+        figure.update_layout(height=360, margin={'l': 10, 'r': 10, 't': 10, 'b': 10})
         figure.update_yaxes(tickformat='.1%')
         st.plotly_chart(figure, use_container_width=True)
 
@@ -143,7 +143,7 @@ else:
         else:
             figure = px.line(volume, x='hour', y='n', markers=True,
                              labels={'hour': 'Hour', 'n': 'Predictions'})
-            figure.update_layout(height=340, margin=dict(l=10, r=10, t=10, b=10))
+            figure.update_layout(height=340, margin={'l': 10, 'r': 10, 't': 10, 'b': 10})
             st.plotly_chart(figure, use_container_width=True)
 
     with right:
@@ -155,7 +155,7 @@ else:
                 distribution, x='probability_default', nbins=40,
                 labels={'probability_default': 'Predicted probability of default'},
             )
-            figure.update_layout(height=340, margin=dict(l=10, r=10, t=10, b=10))
+            figure.update_layout(height=340, margin={'l': 10, 'r': 10, 't': 10, 'b': 10})
             st.plotly_chart(figure, use_container_width=True)
 
 if service_metrics:

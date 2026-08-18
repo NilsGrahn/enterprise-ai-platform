@@ -21,7 +21,7 @@ def _json_safe(obj):
     if hasattr(obj, 'item'):          # numpy scalar -> native Python
         try:
             return _json_safe(obj.item())
-        except Exception:
+        except Exception:  # noqa: BLE001
             return str(obj)
     return obj
 
@@ -64,7 +64,7 @@ def log_prediction(request_id, pipeline_name, model_version, request_payload,
             })
         return True
 
-    except Exception as exc:
+    except Exception as exc:  # noqa: BLE001
         print(f"[prediction_logger] failed to log {request_id}: {exc}",
               file=sys.stderr)
         return False
@@ -85,7 +85,7 @@ def log_service_event(service_name, event_type, details=None):
                 'details': json.dumps(_json_safe(details or {}), default=str),
             })
         return True
-    except Exception as exc:
+    except Exception as exc:  # noqa: BLE001
         print(f"[prediction_logger] failed to log event '{event_type}': {exc}",
               file=sys.stderr)
         return False

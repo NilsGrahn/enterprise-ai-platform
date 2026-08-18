@@ -21,7 +21,7 @@ class RequestContextMiddleware(BaseHTTPMiddleware):
 
         try:
             response = await call_next(request)
-        except Exception as exc:
+        except Exception as exc:  # noqa: BLE001
             latency_ms = int((time.perf_counter() - started) * 1000)
             self._log(request, 500, latency_ms, request_id, error=str(exc))
 

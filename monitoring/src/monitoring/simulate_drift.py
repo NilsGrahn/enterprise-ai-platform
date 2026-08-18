@@ -82,7 +82,7 @@ def to_payload(row, shift) -> dict:
         elif column == 'monthly_income':
             value *= shift['income_multiplier']
 
-        features[alias] = int(round(value)) if column in INTEGER_FIELDS else value
+        features[alias] = round(value) if column in INTEGER_FIELDS else value
 
     return features
 
@@ -113,7 +113,7 @@ def main():
                 failed += 1
                 if failed <= 3:
                     print(f"  HTTP {response.status_code}: {response.text[:200]}")
-        except Exception as exc:
+        except Exception as exc:  # noqa: BLE001
             failed += 1
             if failed <= 3:
                 print(f"  request failed: {exc}")

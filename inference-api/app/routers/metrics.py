@@ -79,7 +79,7 @@ def metrics():
 
     try:
         value = _query_metrics()
-    except Exception as exc:
+    except Exception as exc:  # noqa: BLE001
         print(f"[metrics] query failed: {exc}")
         value = _empty_metrics()
 

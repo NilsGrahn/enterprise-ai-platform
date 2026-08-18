@@ -14,10 +14,9 @@ tolerate:
 
 import numpy as np
 import pandas as pd
+from ml_service.base_pipeline import BasePipeline, TrainingResult
 from sklearn.metrics import precision_score, recall_score, roc_auc_score, roc_curve
 from sklearn.tree import DecisionTreeClassifier
-
-from ml_service.base_pipeline import BasePipeline, TrainingResult
 
 
 class DummyPipeline(BasePipeline):

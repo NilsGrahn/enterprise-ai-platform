@@ -15,7 +15,7 @@ def _database_reachable() -> bool:
         with engine.begin() as conn:
             conn.execute(text('SELECT 1'))
         return True
-    except Exception:
+    except Exception:  # noqa: BLE001
         return False
 
 

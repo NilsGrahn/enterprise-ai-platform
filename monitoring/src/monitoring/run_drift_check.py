@@ -94,7 +94,6 @@ def record_drift(pipeline_name, version, results, window_hours, profile):
 
 def main():
     args = parse_args()
-    settings = get_settings()
 
     warn = args.warn if args.warn is not None else 0.10
     alert = args.alert if args.alert is not None else 0.25

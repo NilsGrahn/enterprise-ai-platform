@@ -52,7 +52,7 @@ class ModelStore:
                   f"model_key={self.model_key}, "
                   f"llm={'enabled' if settings.llm_enabled else 'disabled'}")
 
-        except (ArtifactNotFoundError, Exception) as exc:
+        except (ArtifactNotFoundError, Exception) as exc:  # noqa: BLE001
             self.load_error = str(exc)
             print(f"[model_store] LOAD FAILED: {exc}")
 
@@ -67,7 +67,7 @@ class ModelStore:
                     WHERE pipeline_name = :p AND model_version = :v
                 """), {'p': pipeline_name, 'v': model_version}).fetchone()
             return int(row[0]) if row else None
-        except Exception as exc:
+        except Exception as exc:  # noqa: BLE001
             print(f"[model_store] could not resolve model_key: {exc}")
             return None
 
