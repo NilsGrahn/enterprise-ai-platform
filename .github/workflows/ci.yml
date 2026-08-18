@@ -96,8 +96,6 @@ jobs:
           file: infrastructure/docker/Dockerfile.base
           tags: eap-base:latest
           load: true                 # keep it in the local daemon for later steps
-          cache-from: type=gha
-          cache-to: type=gha,mode=max
 
       - name: Build the service images
         run: |
